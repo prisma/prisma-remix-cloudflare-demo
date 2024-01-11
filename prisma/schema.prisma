@@ -1,11 +1,156 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Location {
+  id                                  Int                      @id @default(autoincrement())
+  landmark                            String                   @default("UNSET")
+  city                                String                   @default("UNSET")
+  county                              String                   @default("UNSET")
+  state                               String                   @default("UNSET")
+  region                              String                   @default("UNSET")
+  country                             String                   @default("UNSET")
+  continent                           String                   @default("UNSET")
+  countyFips                          String?
+  incorporated                        Boolean?
+  military                            Boolean?
+  population                          Int?
+  ranking                             Int?
+  stateAbbrev                         String?
+  zipcodes                            String[]
+  lat                                 Float?
+  lng                                 Float?
+  countyLongName                      String?
+  slug                                String                   @unique
+  addedToSitemapAt                    DateTime?
+  coords                              Unsupported("geometry")?
+  Map_Map_primaryLocationIdToLocation Map[]                    @relation("Map_primaryLocationIdToLocation")
+  UserActivity                        UserActivity[]
+  Map_Locations                       Map[]                    @relation("Locations")
+
+  @@unique([landmark, city, county, state, region, country, continent])
+  @@index([coords], map: "location_coords_idx", type: Gist)
+  @@index([slug], map: "location_slug_idx")
+}
+
+model Map {
+  id                                       String                   @id
+  createdAt                                DateTime                 @default(now())
+  updatedAt                                DateTime
+  creators                                 String[]
+  downloadUrl                              String
+  geotiffUrl                               String
+  heightInches                             Float?
+  latestEditionMapId                       String?
+  publishDate                              DateTime
+  publisher                                String?
+  scale                                    Int?
+  source                                   MapSource
+  thumbnailUrl                             String
+  title                                    String
+  type                                     MapType
+  widthInches                              Float?
+  date                                     DateTime
+  extraData                                Json?
+  sourceId                                 String?                  @unique
+  rawData                                  Json?
+  primaryLocationId                        Int
+  slug                                     String                   @unique
+  sourceUrl                                String?
+  addedToSitemapAt                         DateTime?
+  polygon                                  Unsupported("geometry")?
+  Map                                      Map?                     @relation("MapToMap", fields: [latestEditionMapId], references: [sourceId])
+  other_Map                                Map[]                    @relation("MapToMap")
+  Location_Map_primaryLocationIdToLocation Location                 @relation("Map_primaryLocationIdToLocation", fields: [primaryLocationId], references: [id])
+  UserActivity                             UserActivity[]
+  Location_Locations                       Location[]               @relation("Locations")
+
+  @@index([date, slug], map: "map_date_slug_idx")
+  @@index([latestEditionMapId], map: "map_latest_edition_idx")
+  @@index([polygon], map: "map_polygon_idx", type: Gist)
+  @@index([primaryLocationId], map: "map_primary_location_idx")
+}
+
+model User {
+  id                        String           @id
+  createdAt                 DateTime         @default(now())
+  role                      UserRole         @default(USER)
+  updatedAt                 DateTime
+  email                     String           @unique @db.Citext
+  displayName               String
+  familyName                String?
+  firstName                 String?
+  lastLoginAt               DateTime         @default(now())
+  photoUrl                  String
+  subscriptionType          SubscriptionType @default(FREE)
+  appleAuthJson             Json?
+  facebookAuthJson          Json?
+  googleAuthJson            Json?
+  verifiedEmail             Boolean          @default(false)
+  onboardingStep            OnboardingStep   @default(WELCOME_AND_ASK_PURPOSE)
+  onboardingDetailedIntent  String?
+  onboardingIntent          String?
+  onboardingLastDismissedAt DateTime?
+  UserActivity              UserActivity[]
+}
+
+model UserActivity {
+  id           Int          @id @default(autoincrement())
+  userId       String?
+  activityType ActivityType
+  mapId        String?
+  locationId   Int?
+  timestamp    DateTime     @default(now())
+  Location     Location?    @relation(fields: [locationId], references: [id])
+  Map          Map?         @relation(fields: [mapId], references: [id])
+  User         User?        @relation(fields: [userId], references: [id])
+
+  @@index([userId, timestamp], map: "user_activity_recent_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
+}
+
+enum ActivityType {
+  MAP_VIEWED
+  LOCATION_HUB_VIEWED
+  NEARBY_HUB_VIEWED
+  SERP_VIEWED
+}
+
+enum MapSource {
+  USGS_HISTORICAL_TOPO
+}
+
+enum MapType {
+  TOPO
+}
+
+enum OnboardingStep {
+  WELCOME_AND_ASK_PURPOSE
+  ASK_DETAILED_PURPOSE
+  COMPLETE
+}
+
+enum SubscriptionType {
+  FREE
+  HOBBYIST
+  PRO
+}
+
+enum UserRole {
+  EMPLOYEE
+  USER
 }
