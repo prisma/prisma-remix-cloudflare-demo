@@ -2,31 +2,18 @@
 export default {
   ignoredRouteFiles: ["**/.*"],
   server: "./server.ts",
+  serverBuildPath: "functions/[[path]].js",
   serverConditions: ["workerd", "worker", "browser"],
+  // serverDependenciesToBundle: 'all',
   serverDependenciesToBundle: [
-    // bundle everything except the virtual module for the static content manifest provided by wrangler
-    /^(?!.*\b__STATIC_CONTENT_MANIFEST\b).*$/,
+    /^(?!@prisma\/client)/, // bundle all except @prisma/client
   ],
   serverMainFields: ["browser", "module", "main"],
   serverMinify: true,
   serverModuleFormat: "esm",
   serverPlatform: "neutral",
+  tailwind: true,
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // publicPath: "/build/",
-  // serverBuildPath: "build/index.js",
-
-  serverNodeBuiltinsPolyfill: {
-    modules: {
-      fs: true,
-      stream: true,
-      events: true,
-      net: true,
-      tls: true,
-      path: true,
-      crypto: true,
-      dns: true,
-      assert: true,
-    }
-  },
 };

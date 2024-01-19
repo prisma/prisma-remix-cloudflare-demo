@@ -7,7 +7,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model Location {
@@ -31,13 +30,13 @@ model Location {
   countyLongName                      String?
   slug                                String                   @unique
   addedToSitemapAt                    DateTime?
-  coords                              Unsupported("geometry")?
+  // coords                              Unsupported("geometry")?
   Map_Map_primaryLocationIdToLocation Map[]                    @relation("Map_primaryLocationIdToLocation")
   UserActivity                        UserActivity[]
   Map_Locations                       Map[]                    @relation("Locations")
 
   @@unique([landmark, city, county, state, region, country, continent])
-  @@index([coords], map: "location_coords_idx", type: Gist)
+  // @@index([coords], map: "location_coords_idx", type: Gist)
   @@index([slug], map: "location_slug_idx")
 }
 
@@ -66,7 +65,7 @@ model Map {
   slug                                     String                   @unique
   sourceUrl                                String?
   addedToSitemapAt                         DateTime?
-  polygon                                  Unsupported("geometry")?
+  // polygon                                  Unsupported("geometry")?
   Map                                      Map?                     @relation("MapToMap", fields: [latestEditionMapId], references: [sourceId])
   other_Map                                Map[]                    @relation("MapToMap")
   Location_Map_primaryLocationIdToLocation Location                 @relation("Map_primaryLocationIdToLocation", fields: [primaryLocationId], references: [id])
@@ -75,7 +74,7 @@ model Map {
 
   @@index([date, slug], map: "map_date_slug_idx")
   @@index([latestEditionMapId], map: "map_latest_edition_idx")
-  @@index([polygon], map: "map_polygon_idx", type: Gist)
+  // @@index([polygon], map: "map_polygon_idx", type: Gist)
   @@index([primaryLocationId], map: "map_primary_location_idx")
 }
 
@@ -84,7 +83,7 @@ model User {
   createdAt                 DateTime         @default(now())
   role                      UserRole         @default(USER)
   updatedAt                 DateTime
-  email                     String           @unique @db.Citext
+  email                     String           @unique // @db.Citext
   displayName               String
   familyName                String?
   firstName                 String?
